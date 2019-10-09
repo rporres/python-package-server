@@ -1,6 +1,7 @@
 import html
 import html.parser
 
+
 class IndexHTMLParser(html.parser.HTMLParser):
     def __init__(self):
         super().__init__()

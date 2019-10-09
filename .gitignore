@@ -1,3 +1,7 @@
+# Mac files
+*.DS_Store
+
+.idea
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -11,6 +15,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+doc/_build
 downloads/
 eggs/
 .eggs/
@@ -102,3 +107,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+lookout/core/tests/server
+
+# CI
+.ci
