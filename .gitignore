@@ -108,7 +108,5 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-lookout/core/tests/server
-
 # CI
 .ci

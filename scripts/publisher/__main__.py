@@ -1,4 +1,5 @@
 import argparse
+from email.utils import parseaddr
 import subprocess
 import sys
 import os
@@ -13,20 +14,25 @@ from publisher.parser.index_html_parser import IndexHTMLParser
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    required = (("repo-url", "The repository URL where the Python package lives. "
-                             "It start with \"https://\"."),
+    required = (("repo-url", "The repository URL where the Python package officially lives. "
+                             "It should start with \"https://\"."),
                 ("github-token", "GitHub token to use for pushing to the index repository."),
                 ("index-name", "Index repository name on GitHub, e.g. "
-                               "\"rporres/python-package-server\"."))
+                               "\"rporres/python-package-server\"."),
+                "signature", "Git signature for the index repository, in the standard format "
+                             "Full Name <email@com>")
     optional = (("package-path", "Path to the Python package root.", "."),
                 ("repo-tag", "The tag to publish.", ""),
-                ("target-branch", "The Git branch to which to publish the package.", "master"))
+                ("target-branch", "The Git branch to which to publish the package.", "master"),
+                ("target-dir", "Path in the index repository that is the PyPi root. We are "
+                               "assuming GitHub Pages by default.",
+                 "docs"))
     required = tuple((p + (None,)) for p in required)
     for arg, help, default in required + optional:
         default = os.getenv(arg.replace("-", "_").upper(), default)
         parser.add_argument("--" + arg, help=help + " Default: \"%s\"." % default, default=default)
     args = parser.parse_args()
-    missing = False
+    error = False
     required = set(p[0] for p in required)
     for k, v in vars(args).items():
         # required=True will not work here because we need to check the environment variables
@@ -35,8 +41,12 @@ def parse_args():
         if not v:
             print("Missing argument --%s / environment variable %s" %
                   (k.replace("_", "-"), k.upper()), file=sys.stderr)
-            missing = True
-    return args, missing
+            error = True
+    name, email = parseaddr(args.signature)
+    if not name or not email:
+        print("Invalid Git signature: " + args.signature, file=sys.stderr)
+        error = True
+    return args, error
 
 
 def shell(*args):
@@ -45,10 +55,11 @@ def shell(*args):
 
 
 def main():
-    args, missing = parse_args()
-    if missing:
+    args, error = parse_args()
+    if error:
         return 1
 
+    # Discover the package metadata: name, version, required minimum Python version
     cwd = os.getcwd()
     os.chdir(args.package_path)
     cmd = [sys.executable, str(Path(args.package_path) / "setup.py"), "--name", "--version",
@@ -59,15 +70,20 @@ def main():
     # Normalize name
     # See https://www.python.org/dev/peps/pep-0503/#normalized-names
     normalized_package_name = re.sub(r"[-_.]+", "-", package_name).lower()
-    index_file = Path("docs") / normalized_package_name / "index.html"
+    index_file = Path(args.target_dir) / normalized_package_name / "index.html"
     python_classifier = "Programming Language :: Python :: "
-    python_version = sorted(packaging_version.parse(line[len(python_classifier):])
-                            for line in metadata[2:]
-                            if line.startswith(python_classifier))[0]
+    try:
+        python_version = sorted(packaging_version.parse(line[len(python_classifier):])
+                                for line in metadata[2:]
+                                if line.startswith(python_classifier))[0]
+    except IndexError:
+        raise LookupError("setup.py must contain a \"%s\" classifier."
+                          % python_classifier.strip()) from None
     if not args.repo_tag:
         args.repo_tag = "v" + package_version
     os.chdir(cwd)
 
+    # Publish the new version
     with tempfile.TemporaryDirectory() as index_dir:
         shell("git", "clone", "--branch=" + args.target_branch, "--depth=1",
               "https://%s@github.com/%s.git" % (args.github_token, args.index_name), index_dir)
@@ -101,17 +117,18 @@ def main():
 
         # push the changes
         os.chdir(index_dir)
-        shell("git", "config", "user.name", "Infra source{d}")
-        shell("git", "config", "user.email", "infra@sourced.tech")
+        name, email = parseaddr(args.signature)
+        shell("git", "config", "user.name", name)
+        shell("git", "config", "user.email", email)
 
         if not index_file.exists():
             index_file.parent.mkdir()
-
         with open(index_file, "w") as f:
             f.write(doc)
 
         shell("git", "add", "-A")
-        shell("git", "commit", "-sm", "Update index for " + normalized_package_name)
+        shell("git", "commit", "-sm", "Update index for %s-%s" %
+              (normalized_package_name, package_version))
         shell("git", "push", "origin", "%s:%s" % (args.target_branch, args.target_branch))
 
 
