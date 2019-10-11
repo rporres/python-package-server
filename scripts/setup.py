@@ -1,14 +1,14 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="sourced-publisher",
+    name="pypi-on-github-indexer",
     description="Proprietary package publisher to the GitHub index repository.",
     version="1.0.0",
     license="Apache-2.0",
     author="source{d}",
     author_email="infrastructure@sourced.tech",
-    url="https://github.com/src-d/python-publisher",
-    download_url="https://github.com/src-d/python-publisher",
+    url="https://github.com/src-d/pypi-on-github-indexer",
+    download_url="https://github.com/src-d/pypi-on-github-indexer",
     packages=find_packages(),
     keywords=["pypi", "pip"],
     install_requires=[

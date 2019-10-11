@@ -9,7 +9,7 @@ import tempfile
 
 from packaging import version as packaging_version
 
-from publisher.parser.index_html_parser import IndexHTMLParser
+from pypi_on_github_indexer.parser.index_html_parser import IndexHTMLParser
 
 
 def parse_args():
