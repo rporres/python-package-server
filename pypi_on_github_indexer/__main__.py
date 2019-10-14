@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+from functools import partial
 
 from packaging import version as packaging_version
 
@@ -49,8 +50,8 @@ def parse_args():
     return args, error
 
 
-def shell(*args):
-    print(" ".join(args))
+def secure_shell(github_token, *args):
+    print(" ".join([re.sub(r"%s" % github_token, "<GITHUB_TOKEN>", arg) for arg in args]))
     subprocess.run(args, check=True)
 
 
@@ -85,6 +86,7 @@ def main():
 
     # Publish the new version
     with tempfile.TemporaryDirectory() as index_dir:
+        shell = partial(secure_shell, args.github_token)
         shell("git", "clone", "--branch=" + args.target_branch, "--depth=1",
               "https://%s@github.com/%s.git" % (args.github_token, args.index_name), index_dir)
         index_file = Path(index_dir) / index_file
