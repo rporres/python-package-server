@@ -25,8 +25,9 @@ def parse_args():
                 ("repo-tag", "The tag to publish.", ""),
                 ("target-branch", "The Git branch to which to publish the package.", "master"),
                 ("target-dir", "Path in the index repository that is the PyPi root. We are "
-                               "assuming GitHub Pages by default.",
-                 "docs"))
+                               "assuming GitHub Pages by default.", "docs"),
+                ("do-not-push", "Do not push to index-name repo. Set this to whatever value "
+                                "to activate this option.", ""))
     required = tuple((p + (None,)) for p in required)
     for arg, help, default in required + optional:
         default = os.getenv(arg.replace("-", "_").upper(), default)
@@ -114,6 +115,10 @@ def main():
 </body>
 </html>
 """ % dict(package=package_name, links="\n".join(links))
+
+        if args.do_not_push:
+            print(doc)
+            return 0
 
         # push the changes
         os.chdir(index_dir)
