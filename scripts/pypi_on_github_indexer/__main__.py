@@ -19,8 +19,8 @@ def parse_args():
                 ("github-token", "GitHub token to use for pushing to the index repository."),
                 ("index-name", "Index repository name on GitHub, e.g. "
                                "\"rporres/python-package-server\"."),
-                "signature", "Git signature for the index repository, in the standard format "
-                             "Full Name <email@com>")
+                ("signature", "Git signature for the index repository, in the standard format "
+                             "Full Name <email@com>"))
     optional = (("package-path", "Path to the Python package root.", "."),
                 ("repo-tag", "The tag to publish.", ""),
                 ("target-branch", "The Git branch to which to publish the package.", "master"),
