@@ -1,0 +1,18 @@
+language: python
+
+stages:
+  - name: publish
+    if: tag IS present
+
+jobs:
+  include:
+    - name: Build package
+      stage: publish
+      script:
+        - python3 setup.py bdist_wheel
+    - name: Publish to PyPI
+      install:
+        - pip3 install --upgrade pip
+        - pip3 install twine pyopenssl
+      script:
+        - twine upload dist/*py3-none-any* -u $PYPI_LOGIN -p $PYPI_PASS
