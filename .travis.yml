@@ -6,13 +6,10 @@ stages:
 
 jobs:
   include:
-    - name: Build package
+    - name: Build package and publish to PyPI
       stage: publish
-      script:
-        - python3 setup.py bdist_wheel
-    - name: Publish to PyPI
       install:
         - pip3 install --upgrade pip
         - pip3 install twine pyopenssl
       script:
-        - twine upload dist/*py3-none-any* -u $PYPI_LOGIN -p $PYPI_PASS
+        - python3 setup.py bdist_wheel && twine upload dist/*py3-none-any* -u $PYPI_LOGIN -p $PYPI_PASS
