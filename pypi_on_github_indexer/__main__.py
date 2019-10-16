@@ -23,7 +23,8 @@ def parse_args():
                 ("signature", "Git signature for the index repository, in the standard format "
                              "Full Name <email@com>"))
     optional = (("package-path", "Path to the Python package root.", "."),
-                ("repo-tag", "The tag to publish.", ""),
+                ("repo-tag", "The tag to publish. It must match the version in setup.py; thus "
+                             "this option is merely a safety check.", ""),
                 ("target-branch", "The Git branch to which to publish the package.", "master"),
                 ("target-dir", "Path in the index repository that is the PyPi root. We are "
                                "assuming GitHub Pages by default.", "docs"),
@@ -83,6 +84,10 @@ def main():
                           % python_classifier.strip()) from None
     if not args.repo_tag:
         args.repo_tag = "v" + package_version
+    elif args.repo_tag.lstrip("v") != package_version:
+        print("tag <> setup.py version mismatch: %s vs %s" % (
+            args.repo_tag.lstrip("v"), package_version), file=sys.stderr)
+        return 1
     os.chdir(cwd)
 
     # Publish the new version

@@ -9,7 +9,7 @@ setup(
     description="Proprietary package publisher to the GitHub index repository.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.1.0",
+    version="0.1.1",
     license="Apache-2.0",
     author="source{d}",
     author_email="infrastructure@sourced.tech",
