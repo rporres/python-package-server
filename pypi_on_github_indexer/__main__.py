@@ -21,14 +21,15 @@ def parse_args():
                 ("index-name", "Index repository name on GitHub, e.g. "
                                "\"rporres/python-package-server\"."),
                 ("signature", "Git signature for the index repository, in the standard format "
-                             "Full Name <email@com>"))
+                              "Full Name <email@com>"),
+                ("repo-tag", "The tag to publish, which must match the version in setup.py; "
+                             "this is a safety check."))
     optional = (("package-path", "Path to the Python package root.", "."),
-                ("repo-tag", "The tag to publish. It must match the version in setup.py; thus "
-                             "this option is merely a safety check.", ""),
-                ("target-branch", "The Git branch to which to publish the package.", "master"),
+                ("target-branch", "The Git branch in the index repo to which to publish "
+                                  "the package.", "master"),
                 ("target-dir", "Path in the index repository that is the PyPi root. We are "
                                "assuming GitHub Pages by default.", "docs"),
-                ("do-not-push", "Do not push to index-name repo. Set this to whatever value "
+                ("do-not-push", "Do not push to the index repo. Set this to whatever value "
                                 "to activate this option.", ""))
     required = tuple((p + (None,)) for p in required)
     for arg, help, default in required + optional:
@@ -82,9 +83,7 @@ def main():
     except IndexError:
         raise LookupError("setup.py must contain a \"%s\" classifier."
                           % python_classifier.strip()) from None
-    if not args.repo_tag:
-        args.repo_tag = "v" + package_version
-    elif args.repo_tag.lstrip("v") != package_version:
+    if args.repo_tag.lstrip("v") != package_version:
         print("tag <> setup.py version mismatch: %s vs %s" % (
             args.repo_tag.lstrip("v"), package_version), file=sys.stderr)
         return 1
