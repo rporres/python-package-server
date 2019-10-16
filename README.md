@@ -16,9 +16,12 @@ python3 -m pypi_on_github_indexer \
     --github-token XXXXXXXX \
     --index-name user/python-package-index \
     --repo-url https://github.com/user/foo-bar
+    --repo-tag v0.1.0
 ```
 will parse repo's `setup.py` to find the package version, the package name and the minimum python version to add a commit in the repository containing the index with the following index line
 ```
 <a href="git+https://github.com/src-d/foo-bar@v0.1.0#egg=foo-bar-0.1.0" data-requires-python="&gt;=3.5">foo-bar-0.1.0</a><br/>
 ```
-Repository tag is derived by default from the package version, but that can be customized. See `--help` for a full list of command's options
+Specifying the repository tag is mandatory, and the tag name is checked against the package version to avoid inconsistencies.
+
+See `--help` for the full list of command's options.
