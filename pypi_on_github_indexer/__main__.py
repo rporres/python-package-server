@@ -30,7 +30,10 @@ def parse_args():
                 ("target-dir", "Path in the index repository that is the PyPi root. We are "
                                "assuming GitHub Pages by default.", "docs"),
                 ("do-not-push", "Do not push to the index repo. Set this to whatever value "
-                                "to activate this option.", ""))
+                                "to activate this option.", ""),
+                ("repo-commit", "Hash of specific commit of repo to be installed", ""),
+                ("repo-subdirectory", "Subdirectory of repo to be installed as a Python package",
+                 ""))
     required = tuple((p + (None,)) for p in required)
     for arg, help, default in required + optional:
         default = os.getenv(arg.replace("-", "_").upper(), default)
@@ -97,17 +100,20 @@ def main():
         index_file = Path(index_dir) / index_file
         parser = IndexHTMLParser()
         links_data = parser.get_index_data(str(index_file))
-
+        url = ("git+%(repo_url)s@%(repo_tag)s#egg=%(package_name)s-%(package_version)s" %
+               dict(repo_url=args.repo_url,
+                    repo_tag=args.repo_tag,
+                    package_version=str(package_version),
+                    package_name=package_name))
+        if args.repo_commit != "":
+            url = "%s@%s" % (url, args.repo_commit)
+        if args.repo_subdirectory != "":
+            url = "%s&subdirectory=%s" % (url, args.repo_subdirectory)
         links_data.append({
-            "href": "git+%(repo_url)s@%(repo_tag)s#egg=%(package_name)s-%(package_version)s" %
-                    dict(repo_url=args.repo_url,
-                         repo_tag=args.repo_tag,
-                         package_version=package_version,
-                         package_name=package_name),
+            "href": url,
             "data-requires-python": "&gt;=%s" % python_version,
             "data": "-".join([package_name, package_version])
         })
-
         lt = '<a href="%s" data-requires-python="%s">%s</a><br/>'
         links = [lt % (d["href"], d["data-requires-python"], d["data"]) for d in links_data]
         doc = """<!DOCTYPE html>
